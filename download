@@ -1,0 +1,36 @@
+# Secrets — NEVER commit these
+.env
+*.json.key
+service-account*.json
+gcp-credentials*.json
+
+# Local data snapshots — live in GCS/BigQuery in production
+data/raw/
+data/processed/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/profiles.yml          # contains DB credentials
+
+# Terraform state — store remotely (GCS backend) in production
+infrastructure/.terraform/
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+infrastructure/*.tfvars   # may contain secrets
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
