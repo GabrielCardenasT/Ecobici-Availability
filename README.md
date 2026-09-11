@@ -24,8 +24,7 @@ dashboard before stations run critically low.
 
 ## Pipeline Architecture
 
-GBFS API → Cloud Run Function → BigQuery (raw)
-
+                  GBFS API → Cloud Run Function → BigQuery (raw)
                                      ↓
                                      
                               dbt Core models
