@@ -1,0 +1,14 @@
+﻿.env
+.venv/
+__pycache__/
+*.pyc
+data/raw/
+data/processed/
+*.parquet
+infrastructure/.terraform/
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+infrastructure/terraform.tfvars
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/

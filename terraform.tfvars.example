@@ -1,0 +1,22 @@
+# =============================================================================
+# terraform.tfvars.example
+#
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is git-ignored (contains your real project ID).
+#
+#   cp terraform.tfvars.example terraform.tfvars
+# =============================================================================
+
+project_id    = "your-gcp-project-id-here"   # e.g. "ecobici-pipeline-dev-123456"
+project_short = "ecobici"
+region        = "us-central1"
+environment   = "dev"
+
+# Keep at 90 to stay inside Always Free 10 GB BigQuery quota
+bq_data_retention_days = 90
+
+# Every 5 minutes — matches the GBFS feed's TTL
+ingestion_schedule_cron = "*/5 * * * *"
+
+# Phase 3 will replace this with the real Cloud Run function URL
+function_url_placeholder = "https://placeholder.run.app/ingest"
