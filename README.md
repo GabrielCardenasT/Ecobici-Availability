@@ -25,9 +25,13 @@ dashboard before stations run critically low.
 ## Pipeline Architecture
 
 GBFS API → Cloud Run Function → BigQuery (raw)
+
                                      ↓
+                                     
                               dbt Core models
+                              
                                      ↓
+                                     
                     ┌────────────────┴───────────────────┐
                     ↓                                    ↓
          mart_rebalancing_alerts            mart_cluster_health
