@@ -23,7 +23,7 @@ dashboard before stations run critically low.
 - **Dashboard:** Looker Studio
 
 ## Pipeline Architecture
-\`\`\`
+
 GBFS API → Cloud Run Function → BigQuery (raw)
                                      ↓
                               dbt Core models
@@ -33,18 +33,18 @@ GBFS API → Cloud Run Function → BigQuery (raw)
          mart_rebalancing_alerts            mart_cluster_health
                     ↓                                    ↓
                          Looker Studio Dashboard
-\`\`\`
+
 
 ## Project Structure
-\`\`\`
+
 ingestion/       # Python extraction + schema validation
 infrastructure/  # Terraform IaC (BigQuery, GCS, IAM, Scheduler)
 functions/       # Cloud Run Function entrypoint
 dbt/             # Analytics models (staging → intermediate → marts)
-\`\`\`
+
 
 ## Running Locally
-\`\`\`bash
+bash
 python -m venv .venv
 .venv\Scripts\Activate.ps1     # Windows
 pip install -r requirements.txt
