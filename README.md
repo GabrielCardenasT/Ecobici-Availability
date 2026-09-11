@@ -15,7 +15,7 @@ depletion velocity per station, and surfaces rebalancing alerts to an operations
 dashboard before stations run critically low.
 
 ## Stack
-- **Ingestion:** Python 3.12, Pydantic, Requests → Cloud Run Function (Gen 2)
+- **Ingestion:** Python 3.12.9, Pydantic, Requests → Cloud Run Function (Gen 2)
 - **Orchestration:** Cloud Scheduler (cron every 5 min)
 - **Warehouse:** BigQuery (partitioned + clustered)
 - **Transformation:** dbt Core (5 models, 45 tests, custom macros)
