@@ -1,7 +1,7 @@
 
 # ECOBICI Real-Time Rebalancing & Availability Pipeline
 
-A production-grade data engineering pipeline tracking live bikeshare availability
+A pipeline tracking live bikeshare availability
 across Mexico City's ECOBICI network, built entirely on GCP's Always Free tier.
 
 ## The Problem
@@ -15,36 +15,40 @@ depletion velocity per station, and surfaces rebalancing alerts to an operations
 dashboard before stations run critically low.
 
 ## Stack
-- **Ingestion:** Python 3.12, Pydantic, Requests → Cloud Run Function (Gen 2)
+- **Ingestion:** Python 3.12.9, Pydantic, Requests → Cloud Run Functions (Gen 2)
 - **Orchestration:** Cloud Scheduler (cron every 5 min)
 - **Warehouse:** BigQuery (partitioned + clustered)
 - **Transformation:** dbt Core (5 models, 45 tests, custom macros)
 - **Infrastructure:** Terraform (IaC, Always Free tier)
-- **Dashboard:** Looker Studio
+- **Dashboard:** Looker Studio.
 
 ## Pipeline Architecture
-\`\`\`
-GBFS API → Cloud Run Function → BigQuery (raw)
+
+                  GBFS API → Cloud Run Function → BigQuery (raw)
                                      ↓
+                                     
                               dbt Core models
+                              
                                      ↓
+                                     
                     ┌────────────────┴───────────────────┐
                     ↓                                    ↓
          mart_rebalancing_alerts            mart_cluster_health
                     ↓                                    ↓
                          Looker Studio Dashboard
-\`\`\`
+
 
 ## Project Structure
-\`\`\`
+
 ingestion/       # Python extraction + schema validation
 infrastructure/  # Terraform IaC (BigQuery, GCS, IAM, Scheduler)
 functions/       # Cloud Run Function entrypoint
 dbt/             # Analytics models (staging → intermediate → marts)
-\`\`\`
+
 
 ## Running Locally
-\`\`\`bash
+bash
+
 python -m venv .venv
 .venv\Scripts\Activate.ps1     # Windows
 pip install -r requirements.txt
