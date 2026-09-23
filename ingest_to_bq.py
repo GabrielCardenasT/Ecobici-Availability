@@ -28,9 +28,9 @@ def write_to_bigquery(df: pd.DataFrame, project_id: str, dataset_id: str, table_
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
     )
 
-    # Convert timezone-aware timestamps to strings — BQ load jobs need this
+    # Strip timezone info after converting to UTC — pyarrow needs naive datetimes
     for col in df.select_dtypes(include=["datetimetz"]).columns:
-        df[col] = df[col].astype(str)
+        df[col] = df[col].dt.tz_convert("UTC").dt.tz_localize(None)
 
     logger.info("Writing %d rows to %s...", len(df), table_ref)
     job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
