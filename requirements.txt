@@ -28,3 +28,6 @@ google-auth==2.36.0           # Application Default Credentials
 
 # ── Validation ─────────────────────────────────────────────────────────────
 pydantic==2.9.2
+
+google-cloud-bigquery==3.27.0
+pyarrow==17.0.0
