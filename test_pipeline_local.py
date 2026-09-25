@@ -1,14 +1,3 @@
-"""
-test_pipeline_local.py
-----------------------
-Verifies the full Phase 1 pipeline using real data captured from the
-live ECOBICI GBFS feed on 2026-05-18. 
-
-This test pattern is important for portfolio visibility:
-it proves the pipeline is correct even when the live API is unavailable
-(rate-limited, network-restricted CI, etc.).
-"""
-
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
