@@ -8,11 +8,13 @@ models:
         tests:
           - not_null
           - accepted_values:
+              arguments:
               values: ['BIKE_SHORTAGE','DOCK_OVERFLOW','CRITICAL_DRAIN','IMMINENT_EMPTY']
       - name: alert_severity
         tests:
           - not_null
           - accepted_values:
+            arguments:
               values: ['critical','high','medium']
 
   - name: mart_cluster_health
@@ -23,6 +25,7 @@ models:
       - name: cluster_flow_direction
         tests:
           - accepted_values:
+            arguments:
               values: ['strong_outflow','mild_outflow','balanced','mild_inflow','strong_inflow','unknown']
 
   - name: mart_pipeline_audit

@@ -12,6 +12,7 @@ models:
         tests:
           - not_null
           - accepted_values:
+            arguments:
               values: ['critical_drain','moderate_drain','slow_drain','stable','refilling','unknown']
 
   - name: int_neighborhood_clusters
@@ -23,4 +24,5 @@ models:
         tests:
           - not_null
           - accepted_values:
+              arguments:
               values: ['source','sink','neutral']

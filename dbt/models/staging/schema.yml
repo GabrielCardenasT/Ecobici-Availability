@@ -3,7 +3,7 @@
 sources:
   - name: ecobici_raw
     description: Raw GBFS station snapshots written by GitHub Actions every 15 minutes.
-    database: "{{ env_var('DBT_PROJECT_ID') }}"
+    database: "ecobici-availability"
     schema: ecobici_dev_raw
     tables:
       - name: station_snapshots
@@ -27,4 +27,5 @@ models:
       - name: time_period
         tests:
           - accepted_values:
-              values: ['morning_rush', 'evening_rush', 'off_peak']
+              arguments:
+                values: ['morning_rush', 'evening_rush', 'off_peak']
