@@ -1,4 +1,4 @@
-
+![Pipeline](https://github.com/GabrielCardenasT/Ecobici-Availability/actions/workflows/ingest.yml/badge.svg)
 # ECOBICI Real-Time Rebalancing & Availability Pipeline
 
 A pipeline tracking live bikeshare availability
