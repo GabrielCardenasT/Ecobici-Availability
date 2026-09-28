@@ -53,3 +53,8 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1     # Windows
 pip install -r requirements.txt
 python -m ingestion.extract
+
+## Live Dashboard
+[View on Looker Studio](https://datastudio.google.com/reporting/55f90a71-20f4-45bb-8e8f-5312a3e9ecbd)
+
+![Dashboard]
