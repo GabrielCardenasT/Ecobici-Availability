@@ -9,13 +9,13 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                  values: ['BIKE_SHORTAGE','DOCK_OVERFLOW','CRITICAL_DRAIN','IMMINENT_EMPTY']
+                values: ['BIKE_SHORTAGE','DOCK_OVERFLOW','CRITICAL_DRAIN','IMMINENT_EMPTY']
       - name: alert_severity
         tests:
           - not_null
           - accepted_values:
-            arguments:
-                  values: ['critical','high','medium']
+              arguments:
+                values: ['critical','high','medium']
 
   - name: mart_cluster_health
     description: Neighborhood cluster health scores per snapshot.
@@ -25,8 +25,8 @@ models:
       - name: cluster_flow_direction
         tests:
           - accepted_values:
-            arguments:
-                  values: ['strong_outflow','mild_outflow','balanced','mild_inflow','strong_inflow','unknown']
+              arguments:
+                values: ['strong_outflow','mild_outflow','balanced','mild_inflow','strong_inflow','unknown']
 
   - name: mart_pipeline_audit
     description: Hourly pipeline health. Surfaces gaps and coverage drops.
