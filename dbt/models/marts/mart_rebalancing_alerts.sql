@@ -1,7 +1,6 @@
 {{
     config(
-        materialized       = 'incremental',
-        unique_key         = ['station_id', 'ingested_at_utc', 'alert_type'],
+        materialized       = 'table',
         partition_by       = {
             'field': 'ingested_at_utc',
             'data_type': 'timestamp',
@@ -45,12 +44,6 @@ WITH
 clustered AS (
 
     SELECT * FROM {{ ref('int_neighborhood_clusters') }}
-
-    {% if is_incremental() %}
-    -- Incremental runs only process today's partition.
-    -- Full refresh (`dbt run --full-refresh`) processes all history.
-    WHERE ingested_at_utc >= TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY)
-    {% endif %}
 
 ),
 
@@ -268,10 +261,15 @@ final AS (
         -- Composite surrogate key for incremental deduplication
         FARM_FINGERPRINT(
             CONCAT(station_id, '|', CAST(ingested_at_utc AS STRING), '|', alert_type)
-        )                       AS alert_id,
-        *
+        ) AS alert_id,
+
+        *,
+
+        ingested_at_utc = MAX(ingested_at_utc) OVER () AS is_latest_snapshot
+
     FROM unioned
 
 )
+
 
 SELECT * FROM final

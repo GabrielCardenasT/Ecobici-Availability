@@ -1,0 +1,30 @@
+﻿version: 2
+
+sources:
+  - name: ecobici_raw
+    description: Raw GBFS station snapshots written by GitHub Actions every 15 minutes.
+    database: "{{ env_var('DBT_PROJECT_ID') }}"
+    schema: ecobici_dev_raw
+    tables:
+      - name: station_snapshots
+        description: One row per station per ingestion cycle.
+        config:
+          loaded_at_field: ingested_at_utc
+          freshness:
+            warn_after:  { count: 30,  period: minute }
+            error_after: { count: 60,  period: minute }
+
+models:
+  - name: stg_station_snapshots
+    description: Cleaned view over the raw snapshot table.
+    columns:
+      - name: station_id
+        tests: [not_null]
+      - name: ingested_at_utc
+        tests: [not_null]
+      - name: num_bikes_available
+        tests: [not_null]
+      - name: time_period
+        tests:
+          - accepted_values:
+              values: ['morning_rush', 'evening_rush', 'off_peak']

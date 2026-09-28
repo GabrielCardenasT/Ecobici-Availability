@@ -1,0 +1,26 @@
+﻿version: 2
+
+models:
+  - name: int_station_velocity
+    description: Per-station depletion velocity via LAG window function.
+    columns:
+      - name: station_id
+        tests: [not_null]
+      - name: ingested_at_utc
+        tests: [not_null]
+      - name: velocity_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['critical_drain','moderate_drain','slow_drain','stable','refilling','unknown']
+
+  - name: int_neighborhood_clusters
+    description: Stations assigned to CDMX neighborhood zones with flow direction.
+    columns:
+      - name: neighborhood_cluster
+        tests: [not_null]
+      - name: station_role
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['source','sink','neutral']

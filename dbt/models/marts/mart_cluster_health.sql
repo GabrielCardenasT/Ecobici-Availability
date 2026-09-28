@@ -1,7 +1,6 @@
 {{
     config(
-        materialized     = 'incremental',
-        unique_key       = ['neighborhood_cluster', 'ingested_at_utc'],
+        materialized     = 'table',
         partition_by     = {
             'field': 'ingested_at_utc',
             'data_type': 'timestamp',
@@ -13,29 +12,12 @@
     )
 }}
 
-/*
-  mart_cluster_health.sql
-  ────────────────────────
-  Aggregates int_neighborhood_clusters to the zone level.
-  Answers the questions a rebalancing operations manager actually asks:
-    - "Which zone is most at risk right now?"
-    - "Is Reforma filling up or still receiving bikes?"
-    - "How many trucks do I need to dispatch to Roma/Condesa?"
-
-  One row per zone per poll. Queryable directly in Looker Studio via:
-    WHERE ingested_at_utc >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 HOUR)
-    ORDER BY cluster_health_score ASC
-*/
 
 WITH
 
 clustered AS (
 
     SELECT * FROM {{ ref('int_neighborhood_clusters') }}
-
-    {% if is_incremental() %}
-    WHERE ingested_at_utc >= TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY)
-    {% endif %}
 
 ),
 

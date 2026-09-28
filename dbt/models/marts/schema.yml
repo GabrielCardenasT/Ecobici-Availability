@@ -1,0 +1,34 @@
+﻿version: 2
+
+models:
+  - name: mart_rebalancing_alerts
+    description: One row per active alert per station per snapshot.
+    columns:
+      - name: alert_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['BIKE_SHORTAGE','DOCK_OVERFLOW','CRITICAL_DRAIN','IMMINENT_EMPTY']
+      - name: alert_severity
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['critical','high','medium']
+
+  - name: mart_cluster_health
+    description: Neighborhood cluster health scores per snapshot.
+    columns:
+      - name: neighborhood_cluster
+        tests: [not_null]
+      - name: cluster_flow_direction
+        tests:
+          - accepted_values:
+              values: ['strong_outflow','mild_outflow','balanced','mild_inflow','strong_inflow','unknown']
+
+  - name: mart_pipeline_audit
+    description: Hourly pipeline health. Surfaces gaps and coverage drops.
+    columns:
+      - name: audit_date
+        tests: [not_null]
+      - name: hour_is_healthy
+        tests: [not_null]
