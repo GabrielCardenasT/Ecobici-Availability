@@ -39,24 +39,9 @@ jobs:
 
       - name: Run dbt models
         run: |
-          mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml << EOF
-          ecobici_pipeline:
-            target: dev
-            outputs:
-              dev:
-                type: bigquery
-                method: service-account
-                project: ${{ secrets.GCP_PROJECT_ID }}
-                dataset: ecobici_dev_marts
-                keyfile: /tmp/sa_key.json
-                location: US
-                threads: 4
-                timeout_seconds: 300
-          EOF
           cd dbt
           dbt deps
-          dbt run
+          dbt run --profiles-dir .
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
 
