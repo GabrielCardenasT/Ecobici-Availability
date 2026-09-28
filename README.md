@@ -57,5 +57,4 @@ python -m ingestion.extract
 ## Live Dashboard
 [View on Looker Studio](https://datastudio.google.com/reporting/55f90a71-20f4-45bb-8e8f-5312a3e9ecbd)
 
-![Dashboard] 
 <img width="1919" height="901" alt="image" src="https://github.com/user-attachments/assets/cc414ba9-896e-48bc-8df9-a3dce3c9a17f" />
