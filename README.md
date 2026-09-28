@@ -11,7 +11,7 @@
 ## 🔴 Live Dashboard
 **[→ View on Looker Studio](https://datastudio.google.com/reporting/55f90a71-20f4-45bb-8e8f-5312a3e9ecbd)**
 
-![Dashboard Preview](<img width="1464" height="885" alt="image" src="https://github.com/user-attachments/assets/4ddddc62-723c-4c1e-9c37-aea1f5108d0e" />
+![Dashboard Preview] (<img width="1464" height="885" alt="image" src="https://github.com/user-attachments/assets/4ddddc62-723c-4c1e-9c37-aea1f5108d0e" />
 
 )
 
