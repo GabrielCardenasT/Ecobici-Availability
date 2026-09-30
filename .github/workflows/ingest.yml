@@ -5,6 +5,12 @@ on:
     - cron: '*/15 * * * *'
   workflow_dispatch:
 
+on:
+  repository_dispatch:
+    types: [trigger-ingestion]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   ingest:
