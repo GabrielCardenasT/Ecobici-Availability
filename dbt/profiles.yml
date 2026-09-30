@@ -3,6 +3,15 @@ ecobici_pipeline:
   outputs:
     dev:
       type: bigquery
+      method: oauth
+      project: ecobici-availability
+      dataset: ecobici_dev_marts
+      location: US
+      threads: 4
+      timeout_seconds: 300
+
+    ci:
+      type: bigquery
       method: service-account
       project: ecobici-availability
       dataset: ecobici_dev_marts
