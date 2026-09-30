@@ -1,9 +1,5 @@
 name: ECOBICI Ingestion Pipeline
 
-on:
-  schedule:
-    - cron: '*/15 * * * *'
-  workflow_dispatch:
 
 on:
   repository_dispatch:
