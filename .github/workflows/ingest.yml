@@ -45,6 +45,7 @@ jobs:
           cd dbt
           dbt deps
           dbt run --target ci --profiles-dir .
+          dbt test --target ci --profiles-dir .
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
 
