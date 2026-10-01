@@ -1,6 +1,5 @@
 name: ECOBICI Ingestion Pipeline
 
-
 on:
   repository_dispatch:
     types: [trigger-ingestion]
