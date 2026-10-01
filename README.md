@@ -31,7 +31,8 @@ operations dashboard before stations run critically low.
 
 ## Pipeline Architecture
 ECOBICI GBFS API (677 stations)
-↓ every 15 min
+↓
+every 15 min
 GitHub Actions CI/CD
 ↓
 Python ingestion script
