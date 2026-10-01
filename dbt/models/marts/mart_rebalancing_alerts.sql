@@ -8,7 +8,7 @@
         },
         cluster_by         = ['neighborhood_cluster', 'alert_severity'],
         on_schema_change   = 'append_new_columns',
-        description        = 'One row per station per snapshot where an alert condition is active. The primary output for the operations dashboard and rebalancing crew dispatch.'
+        description        = 'One row per station per alert type for the latest snapshot where an alert condition is active. The primary output for the operations dashboard and rebalancing crew dispatch.'
     )
 }}
 
@@ -28,9 +28,8 @@
   This design makes aggregation simpler: COUNT(*) per alert_type gives
   the exact count of each alert class with no CASE gymnastics.
 
-  Incremental strategy: insert_overwrite on day partition.
-    On each dbt run, the current day's partition is fully replaced.
-    This is idempotent — re-running never creates duplicate alert rows.
+  The model processes ONLY the latest available snapshot from
+  int_neighborhood_clusters.
 
   Operations team consumption:
     SELECT * FROM mart_rebalancing_alerts
@@ -41,10 +40,16 @@
 
 WITH
 
+latest_snapshot AS (
+    SELECT MAX(ingested_at_utc) AS max_ts
+    FROM {{ ref('int_neighborhood_clusters') }}
+),
+
 clustered AS (
-
-    SELECT * FROM {{ ref('int_neighborhood_clusters') }}
-
+    SELECT c.*
+    FROM {{ ref('int_neighborhood_clusters') }} c
+    CROSS JOIN latest_snapshot l
+    WHERE c.ingested_at_utc = l.max_ts
 ),
 
 -- ── Unpivot alert conditions into individual alert rows ────────────────────
@@ -78,14 +83,14 @@ bike_shortage_alerts AS (
         ingested_at_cdmx,
 
         -- Alert metadata
-        'BIKE_SHORTAGE'                                              AS alert_type,
-        'Station has fewer than 10% bikes available'                AS alert_description,
+        'BIKE_SHORTAGE' AS alert_type,
+        'Station has fewer than 10% bikes available' AS alert_description,
 
         CASE
-            WHEN availability_pct = 0                               THEN 'critical'
-            WHEN availability_pct < 0.05                            THEN 'high'
+            WHEN availability_pct = 0 THEN 'critical'
+            WHEN availability_pct < 0.05 THEN 'high'
             ELSE 'medium'
-        END                                                          AS alert_severity,
+        END AS alert_severity,
 
         -- Dispatch priority score (lower = dispatch sooner)
         -- Combines urgency (velocity) with current state (availability)
@@ -94,10 +99,10 @@ bike_shortage_alerts AS (
             COALESCE(1.0 - availability_pct, 1.0)
             * COALESCE(
                 LEAST(1.0, ABS(depletion_velocity_per_min) / 0.5),
-                0.5   -- unknown velocity gets half weight
+                0.5
             ),
             4
-        )                                                            AS dispatch_priority_score
+        ) AS dispatch_priority_score
 
     FROM clustered
     WHERE is_critically_low_bikes = TRUE
@@ -129,14 +134,14 @@ dock_overflow_alerts AS (
         ingested_at_utc,
         ingested_at_cdmx,
 
-        'DOCK_OVERFLOW'                                              AS alert_type,
-        'Station has fewer than 10% docks available'                AS alert_description,
+        'DOCK_OVERFLOW' AS alert_type,
+        'Station has fewer than 10% docks available' AS alert_description,
 
         CASE
-            WHEN dock_pct = 0                                        THEN 'critical'
-            WHEN dock_pct < 0.05                                     THEN 'high'
+            WHEN dock_pct = 0 THEN 'critical'
+            WHEN dock_pct < 0.05 THEN 'high'
             ELSE 'medium'
-        END                                                          AS alert_severity,
+        END AS alert_severity,
 
         ROUND(
             COALESCE(1.0 - dock_pct, 1.0)
@@ -145,7 +150,7 @@ dock_overflow_alerts AS (
                 0.5
             ),
             4
-        )                                                            AS dispatch_priority_score
+        ) AS dispatch_priority_score
 
     FROM clustered
     WHERE is_critically_low_docks = TRUE
@@ -177,20 +182,20 @@ critical_drain_alerts AS (
         ingested_at_utc,
         ingested_at_cdmx,
 
-        'CRITICAL_DRAIN'                                             AS alert_type,
-        'Station is losing bikes faster than 0.5 bikes/minute'      AS alert_description,
+        'CRITICAL_DRAIN' AS alert_type,
+        'Station is losing bikes faster than 0.5 bikes/minute' AS alert_description,
 
         CASE
-            WHEN depletion_velocity_per_min <= -1.0                  THEN 'critical'
-            WHEN depletion_velocity_per_min <= -0.7                  THEN 'high'
+            WHEN depletion_velocity_per_min <= -1.0 THEN 'critical'
+            WHEN depletion_velocity_per_min <= -0.7 THEN 'high'
             ELSE 'medium'
-        END                                                          AS alert_severity,
+        END AS alert_severity,
 
         ROUND(
             LEAST(1.0, ABS(depletion_velocity_per_min) / 1.0)
             * COALESCE(1.0 - availability_pct, 0.5),
             4
-        )                                                            AS dispatch_priority_score
+        ) AS dispatch_priority_score
 
     FROM clustered
     WHERE velocity_status = 'critical_drain'
@@ -222,20 +227,21 @@ imminent_empty_alerts AS (
         ingested_at_utc,
         ingested_at_cdmx,
 
-        'IMMINENT_EMPTY'                                             AS alert_type,
-        'Station will run out of bikes within 15 minutes at current rate' AS alert_description,
+        'IMMINENT_EMPTY' AS alert_type,
+        'Station will run out of bikes within 15 minutes at current rate'
+            AS alert_description,
 
         CASE
-            WHEN est_minutes_to_empty <= 5                           THEN 'critical'
-            WHEN est_minutes_to_empty <= 10                          THEN 'high'
+            WHEN est_minutes_to_empty <= 5 THEN 'critical'
+            WHEN est_minutes_to_empty <= 10 THEN 'high'
             ELSE 'medium'
-        END                                                          AS alert_severity,
+        END AS alert_severity,
 
         -- Priority: stations emptying soonest get dispatched first
         ROUND(
             SAFE_DIVIDE(15.0 - est_minutes_to_empty, 15.0),
             4
-        )                                                            AS dispatch_priority_score
+        ) AS dispatch_priority_score
 
     FROM clustered
     WHERE est_minutes_to_empty IS NOT NULL
@@ -246,11 +252,17 @@ imminent_empty_alerts AS (
 unioned AS (
 
     SELECT * FROM bike_shortage_alerts
+
     UNION ALL
+
     SELECT * FROM dock_overflow_alerts
+
     UNION ALL
+
     SELECT * FROM critical_drain_alerts
+
     UNION ALL
+
     SELECT * FROM imminent_empty_alerts
 
 ),
@@ -258,18 +270,21 @@ unioned AS (
 final AS (
 
     SELECT
-        -- Composite surrogate key for incremental deduplication
+        -- Composite surrogate key
         FARM_FINGERPRINT(
-            CONCAT(station_id, '|', CAST(ingested_at_utc AS STRING), '|', alert_type)
+            CONCAT(
+                station_id,
+                '|',
+                CAST(ingested_at_utc AS STRING),
+                '|',
+                alert_type
+            )
         ) AS alert_id,
 
-        *,
-
-        ingested_at_utc = MAX(ingested_at_utc) OVER () AS is_latest_snapshot
+        *
 
     FROM unioned
 
 )
-
 
 SELECT * FROM final
