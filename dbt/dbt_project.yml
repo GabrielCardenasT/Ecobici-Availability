@@ -32,6 +32,12 @@ vars:
   # Matches the 10% threshold from Phase 1 schema.py.
   alert_threshold_pct: 0.10
 
+  # ECOBICI service window (CDMX local time). The system closes at 00:30 and
+  # reopens at 05:00 every day. Rows inside the closed window are dropped in
+  # staging; mart_pipeline_audit uses these to label hours as 'system_closed'.
+  service_close_time: "00:30:00"
+  service_open_time:  "05:00:00"
+
   # Neighborhood clusters — used by int_neighborhood_clusters.
   # Defined here so they can be overridden in tests without changing SQL.
   cdmx_cluster_names:
@@ -50,9 +56,12 @@ vars:
 #   Running LAG() over 26,000 rows per day as a view would re-execute the
 #   full scan on every downstream query. One table write amortizes the cost.
 #
-# Marts: incremental tables — the final outputs grow continuously.
-#   incremental + partition_by(ingested_at_utc) means each dbt run
-#   only processes today's new rows, not the full history.
+# Marts: tables (full rebuild each run).
+#   BigQuery Sandbox does not allow DML, and incremental models need
+#   MERGE / INSERT. Every mart already sets materialized='table' in its own
+#   config; this default now matches so the project config tells the truth.
+#   With billing enabled, switch to incremental + insert_overwrite so each
+#   run only rewrites today's partition.
 
 models:
   ecobici_pipeline:
@@ -65,7 +74,5 @@ models:
       +schema: marts      # writes to ecobici_dev_marts dataset
 
     marts:
-      +materialized: incremental
+      +materialized: table
       +schema: marts
-      +incremental_strategy: insert_overwrite   # BigQuery-native: replaces partitions
-      +on_schema_change: append_new_columns

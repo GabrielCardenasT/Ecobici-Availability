@@ -72,8 +72,11 @@ aggregated AS (
             WHEN SUM(depletion_velocity_per_min) <= -0.3 THEN 'mild_outflow'
             WHEN SUM(depletion_velocity_per_min) <   0.3
              AND SUM(depletion_velocity_per_min) >  -0.3 THEN 'balanced'
-            WHEN SUM(depletion_velocity_per_min) >=  0.3 THEN 'mild_inflow'
+            -- strong_inflow must be checked BEFORE mild_inflow; otherwise every
+            -- value >= 1.0 is caught by the >= 0.3 branch and strong_inflow
+            -- can never appear.
             WHEN SUM(depletion_velocity_per_min) >=  1.0 THEN 'strong_inflow'
+            WHEN SUM(depletion_velocity_per_min) >=  0.3 THEN 'mild_inflow'
             ELSE 'unknown'
         END                                                          AS cluster_flow_direction
 
@@ -106,10 +109,12 @@ with_health_score AS (
         ROUND(
             (0.50 * COALESCE(cluster_availability_pct, 0.5))
             + (0.30 * (1.0 - SAFE_DIVIDE(stations_low_bikes, NULLIF(total_stations, 0))))
-            + (0.20 * GREATEST(0.0, 1.0 + COALESCE(
+            -- Velocity term clamped to [0, 1]: a refilling cluster
+            -- (avg velocity > 0) must not push the score above 1.0.
+            + (0.20 * LEAST(1.0, GREATEST(0.0, 1.0 + COALESCE(
                 SAFE_DIVIDE(avg_depletion_velocity, 1.0),
                 0.0
-              ))),
+              )))),
             4
         )                                                            AS cluster_health_score,
 
@@ -118,7 +123,13 @@ with_health_score AS (
         -- Operations teams override this based on actual truck availability.
         CAST(
             CEIL(SAFE_DIVIDE(stations_low_bikes + stations_low_docks, 3.0))
-        AS INT64)                                                    AS recommended_truck_dispatches
+        AS INT64)                                                    AS recommended_truck_dispatches,
+
+        -- ── Latest-snapshot flag ─────────────────────────────────────────────
+        -- This table holds every snapshot in the lookback window, so a Looker
+        -- scorecard with no filter averages ~2 days of history. Filter on
+        -- is_latest_snapshot = TRUE to show the state of the system right now.
+        ingested_at_utc = MAX(ingested_at_utc) OVER ()               AS is_latest_snapshot
 
     FROM aggregated
 

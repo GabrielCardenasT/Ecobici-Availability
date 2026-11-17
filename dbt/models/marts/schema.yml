@@ -1,4 +1,4 @@
-﻿version: 2
+version: 2
 
 models:
   - name: mart_rebalancing_alerts
@@ -16,6 +16,14 @@ models:
           - accepted_values:
               arguments:
                 values: ['critical','high','medium']
+      - name: dispatch_priority_score
+        description: Urgency in [0, 1]; higher = dispatch sooner. Empty stations score 1.0.
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
 
   - name: mart_cluster_health
     description: Neighborhood cluster health scores per snapshot.
@@ -27,6 +35,15 @@ models:
           - accepted_values:
               arguments:
                 values: ['strong_outflow','mild_outflow','balanced','mild_inflow','strong_inflow','unknown']
+      - name: cluster_health_score
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+      - name: is_latest_snapshot
+        description: TRUE only for rows from the most recent poll. Filter on this for "current state" tiles.
+        tests: [not_null]
 
   - name: mart_pipeline_audit
     description: Hourly pipeline health. Surfaces gaps and coverage drops.
@@ -35,3 +52,10 @@ models:
         tests: [not_null]
       - name: hour_is_healthy
         tests: [not_null]
+      - name: audit_status
+        description: healthy | system_closed | low_coverage | gap — drives dashboard row colour.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['healthy','system_closed','low_coverage','gap']

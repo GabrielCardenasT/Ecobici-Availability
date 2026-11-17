@@ -13,6 +13,7 @@
     - No business logic — only cleaning, casting, and temporal grain derivation
     - Filters to only INSTALLED + RENTING stations (offline stations carry no
       operational meaning for rebalancing decisions)
+    - Filters out the system's closed window (00:30–05:00 CDMX), see bottom
     - Adds hour_of_day and day_of_week for downstream window partitioning
       without repeating EXTRACT() in every intermediate model
 
@@ -126,3 +127,16 @@ enriched AS (
 )
 
 SELECT * FROM enriched
+
+-- ── Service-hours filter ──────────────────────────────────────────────────────
+-- ECOBICI operates 05:00–00:30 CDMX time, every day. During the closed window
+-- the feed still lists every station but almost none have is_renting = TRUE,
+-- so the few rows that survive the filter above are noise: they dragged the
+-- hourly availability curve to ~0% between 01:00 and 04:00 and made the
+-- cluster averages look worse than reality. Raw data is untouched;
+-- mart_pipeline_audit reads the raw source directly so night-time ingestion
+-- is still audited.
+WHERE NOT (
+    TIME(ingested_at_cdmx) >= TIME '{{ var("service_close_time") }}'
+    AND TIME(ingested_at_cdmx) < TIME '{{ var("service_open_time") }}'
+)
