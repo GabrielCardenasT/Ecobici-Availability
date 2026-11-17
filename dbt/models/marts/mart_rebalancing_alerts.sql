@@ -92,17 +92,25 @@ bike_shortage_alerts AS (
             ELSE 'medium'
         END AS alert_severity,
 
-        -- Dispatch priority score (lower = dispatch sooner)
-        -- Combines urgency (velocity) with current state (availability)
-        -- Formula: stations draining fast + nearly empty get score near 1.0
-        ROUND(
-            COALESCE(1.0 - availability_pct, 1.0)
-            * COALESCE(
-                LEAST(1.0, ABS(depletion_velocity_per_min) / 0.5),
-                0.5
-            ),
-            4
-        ) AS dispatch_priority_score
+        -- Dispatch priority score [0, 1] — HIGHER = dispatch sooner.
+        --   * An empty station is already failing riders → always 1.0.
+        --   * Otherwise: state severity (1 - availability) scaled by drain
+        --     pressure. A stable station keeps 50% of its severity; one
+        --     draining at >= 0.5 bikes/min keeps 100%.
+        --   * Only DRAINING counts (GREATEST(0, -v)). The old ABS() gave
+        --     refilling stations high urgency, and a stable-empty station
+        --     (velocity = 0.0, not NULL) got COALESCE(0.0, 0.5) = 0 → score 0.
+        CASE
+            WHEN num_bikes_available = 0 THEN 1.0
+            ELSE ROUND(
+                COALESCE(1.0 - availability_pct, 1.0)
+                * (0.5 + 0.5 * COALESCE(
+                    LEAST(1.0, GREATEST(0.0, -depletion_velocity_per_min) / 0.5),
+                    0.0
+                )),
+                4
+            )
+        END AS dispatch_priority_score
 
     FROM clustered
     WHERE is_critically_low_bikes = TRUE
@@ -143,14 +151,20 @@ dock_overflow_alerts AS (
             ELSE 'medium'
         END AS alert_severity,
 
-        ROUND(
-            COALESCE(1.0 - dock_pct, 1.0)
-            * COALESCE(
-                LEAST(1.0, ABS(dock_fill_velocity_per_min) / 0.5),
-                0.5
-            ),
-            4
-        ) AS dispatch_priority_score
+        -- Same shape as BIKE_SHORTAGE, mirrored for docks.
+        -- dock_fill_velocity_per_min < 0 means free docks are DISAPPEARING
+        -- (bikes arriving), so urgency comes from GREATEST(0, -v).
+        CASE
+            WHEN num_docks_available = 0 THEN 1.0
+            ELSE ROUND(
+                COALESCE(1.0 - dock_pct, 1.0)
+                * (0.5 + 0.5 * COALESCE(
+                    LEAST(1.0, GREATEST(0.0, -dock_fill_velocity_per_min) / 0.5),
+                    0.0
+                )),
+                4
+            )
+        END AS dispatch_priority_score
 
     FROM clustered
     WHERE is_critically_low_docks = TRUE

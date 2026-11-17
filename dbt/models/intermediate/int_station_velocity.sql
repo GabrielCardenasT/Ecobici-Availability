@@ -111,8 +111,9 @@ with_velocity AS (
              prior_ts_col    = 'prior_ingested_at_utc'
         ) }} AS depletion_velocity_per_min,
 
-        -- ── Dock fill velocity (inverse: how fast docks are disappearing) ─────
-        -- Positive = docks are filling up (bikes arriving). Negative = docks freeing.
+        -- ── Dock fill velocity (change in FREE docks per minute) ──────────────
+        -- Negative = free docks disappearing (bikes arriving → overflow risk).
+        -- Positive = docks freeing up (bikes leaving).
         {{ depletion_velocity(
              bikes_col       = 'num_docks_available',
              prior_bikes_col = 'prior_docks_available',
