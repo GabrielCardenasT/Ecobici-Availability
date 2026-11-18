@@ -21,6 +21,7 @@
     1. BIKE_SHORTAGE  : availability_pct < 10% (station running out of bikes)
     2. DOCK_OVERFLOW  : dock_pct < 10% (station running out of docks)
     3. CRITICAL_DRAIN : depletion_velocity <= -0.5 (losing ≥1 bike / 2 min)
+                        and at least 1 bike left (empty = BIKE_SHORTAGE)
     4. IMMINENT_EMPTY : est_minutes_to_empty <= 15 (< 15 min at current rate)
                         and at least 1 bike left (empty = BIKE_SHORTAGE)
 
@@ -214,6 +215,10 @@ critical_drain_alerts AS (
 
     FROM clustered
     WHERE velocity_status = 'critical_drain'
+      -- A station that has already hit 0 cannot keep draining; it is covered
+      -- by BIKE_SHORTAGE. Without this guard the bikes lost on the way to 0
+      -- produced a second, duplicate alert for the same empty station.
+      AND num_bikes_available > 0
 
 ),
 
