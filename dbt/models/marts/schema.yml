@@ -41,6 +41,14 @@ models:
               arguments:
                 min_value: 0
                 max_value: 1
+      - name: system_availability_pct
+        description: Capacity-weighted availability of the whole system for the snapshot (total bikes / total capacity).
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
       - name: is_latest_snapshot
         description: TRUE only for rows from the most recent poll. Filter on this for "current state" tiles.
         tests: [not_null]
