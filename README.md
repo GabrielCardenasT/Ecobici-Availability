@@ -66,6 +66,19 @@ Looker Studio Dashboard
   GCS buckets, IAM, Cloud Scheduler). Not deployed due to Sandbox constraints
   but production-ready for a billing-enabled project.
 
+## Data Quality
+
+Every change goes through a pull request and runs `dbt build` against
+BigQuery: 7 models, 33 tests (schema tests, accepted ranges/values, and
+regression tests for bugs that once shipped).
+
+| Issue found in the dashboard | Root cause | Fix |
+|---|---|---|
+| Empty stations had dispatch priority **0** | `COALESCE(velocity, …)` treats `0.0` as a value, not as missing | Empty station = 1.0; only *draining* raises urgency |
+| “Pipeline failures” every night | Audit measured renting stations; ECOBICI closes 00:30–05:00 | Audit reads the raw feed; hours labelled `system_closed` / `in_progress` |
+| Availability KPI overstated (24% vs **20%**) | Averaged zones equally, over 2 days of history | Capacity-weighted `system_availability_pct` on the latest snapshot |
+| Same empty station raised 2–3 alerts | Drain/imminent rules fired at 0 bikes | Those alerts require ≥ 1 bike; empty = `BIKE_SHORTAGE` only |
+
 ## Stack
 
 | Layer | Technology |
@@ -81,8 +94,10 @@ Looker Studio Dashboard
 stg_station_snapshots (view) — clean + filter raw snapshots
 int_station_velocity (table) — LAG window, depletion velocity
 int_neighborhood_clusters (table) — station → CDMX zone mapping
-mart_rebalancing_alerts (table) — one row per active alert
-mart_cluster_health (table) — zone-level aggregations
+mart_rebalancing_alerts (table) — one row per active alert, ranked by dispatch priority
+mart_cluster_health (table) — zone-level aggregations + system-wide availability
+mart_latest_snapshot (table) — current state of every station
+mart_pipeline_audit (table) — hourly ingestion health (polls, feed coverage, status)
 
 
 ## Running Locally
