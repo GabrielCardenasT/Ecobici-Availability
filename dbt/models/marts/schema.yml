@@ -51,7 +51,11 @@ models:
       - name: audit_date
         tests: [not_null]
       - name: hour_is_healthy
-        tests: [not_null]
+        description: NULL only for the hour still in progress (audit_status = 'in_progress').
+        tests:
+          - not_null:
+              config:
+                where: "audit_status != 'in_progress'"
       - name: audit_status
         description: healthy | system_closed | low_coverage | gap | in_progress — drives dashboard row colour.
         tests:
