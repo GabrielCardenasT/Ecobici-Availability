@@ -73,7 +73,15 @@ polls_per_hour AS (
         LOGICAL_AND(
             TIME(ingested_at_cdmx) >= TIME '{{ var("service_close_time") }}'
             AND TIME(ingested_at_cdmx) < TIME '{{ var("service_open_time") }}'
-        )                                                           AS is_system_closed
+        )                                                           AS is_system_closed,
+
+        -- The current CDMX hour is still collecting polls. Judging it now
+        -- flagged a false 'gap' every time dbt ran early in the hour.
+        LOGICAL_OR(
+            DATE(ingested_at_cdmx) = CURRENT_DATE('America/Mexico_City')
+            AND EXTRACT(HOUR FROM ingested_at_cdmx)
+                = EXTRACT(HOUR FROM CURRENT_DATETIME('America/Mexico_City'))
+        )                                                           AS is_in_progress
 
     FROM raw_polls
     GROUP BY audit_date, audit_hour
@@ -102,9 +110,11 @@ audit AS (
         ROUND(SAFE_DIVIDE(p.stations_observed, e.expected_stations), 4) AS coverage_pct,
         ROUND(p.stale_reading_rate, 4)                              AS stale_reading_rate,
         p.is_system_closed,
+        p.is_in_progress,
 
-        -- Gap: fewer than 2 of 4 expected polls this hour
-        p.actual_polls < 2                                          AS pipeline_gap_detected,
+        -- Gap: fewer than 2 of 4 expected polls this hour.
+        -- Never raised for the hour still in progress (it has not finished).
+        (NOT p.is_in_progress AND p.actual_polls < 2)               AS pipeline_gap_detected,
 
         -- Coverage: the feed returned fewer than 90% of known stations
         SAFE_DIVIDE(p.stations_observed, e.expected_stations) < 0.90 AS low_coverage_detected,
@@ -113,11 +123,14 @@ audit AS (
 
         -- Healthy = we polled AND the feed was complete. Applies at night too:
         -- the pipeline should keep polling while the system is closed.
-        (p.actual_polls >= 2
-         AND SAFE_DIVIDE(p.stations_observed, e.expected_stations) >= 0.90) AS hour_is_healthy,
+        -- NULL for the hour in progress: it cannot be judged yet.
+        IF(p.is_in_progress, NULL,
+           p.actual_polls >= 2
+           AND SAFE_DIVIDE(p.stations_observed, e.expected_stations) >= 0.90) AS hour_is_healthy,
 
         -- Single label for dashboards (drives the row colour in Looker Studio)
         CASE
+            WHEN p.is_in_progress                                          THEN 'in_progress'
             WHEN p.actual_polls < 2                                        THEN 'gap'
             WHEN SAFE_DIVIDE(p.stations_observed, e.expected_stations) < 0.90 THEN 'low_coverage'
             WHEN p.is_system_closed                                        THEN 'system_closed'
