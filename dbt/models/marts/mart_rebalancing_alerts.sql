@@ -22,6 +22,7 @@
     2. DOCK_OVERFLOW  : dock_pct < 10% (station running out of docks)
     3. CRITICAL_DRAIN : depletion_velocity <= -0.5 (losing ≥1 bike / 2 min)
     4. IMMINENT_EMPTY : est_minutes_to_empty <= 15 (< 15 min at current rate)
+                        and at least 1 bike left (empty = BIKE_SHORTAGE)
 
   A single snapshot can generate multiple alert rows (e.g. a station that
   is both at < 10% bikes AND draining at -0.6 bikes/min gets two rows).
@@ -260,6 +261,10 @@ imminent_empty_alerts AS (
     FROM clustered
     WHERE est_minutes_to_empty IS NOT NULL
       AND est_minutes_to_empty <= 15
+      -- "About to empty" only makes sense while bikes remain. An already-empty
+      -- station is covered by BIKE_SHORTAGE; without this guard it raised a
+      -- second, duplicate alert (est_minutes_to_empty = 0).
+      AND num_bikes_available > 0
 
 ),
 

@@ -53,9 +53,9 @@ models:
       - name: hour_is_healthy
         tests: [not_null]
       - name: audit_status
-        description: healthy | system_closed | low_coverage | gap — drives dashboard row colour.
+        description: healthy | system_closed | low_coverage | gap | in_progress — drives dashboard row colour.
         tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['healthy','system_closed','low_coverage','gap']
+                values: ['healthy','system_closed','low_coverage','gap','in_progress']
