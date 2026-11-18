@@ -305,6 +305,15 @@ final AS (
             )
         ) AS alert_id,
 
+        -- Human-readable label for dashboards. alert_type stays the stable
+        -- machine key (tests, filters); BI tools display alert_label.
+        CASE alert_type
+            WHEN 'BIKE_SHORTAGE'  THEN 'Bike shortage'
+            WHEN 'DOCK_OVERFLOW'  THEN 'Dock overflow'
+            WHEN 'CRITICAL_DRAIN' THEN 'Critical drain'
+            WHEN 'IMMINENT_EMPTY' THEN 'Imminent empty'
+        END AS alert_label,
+
         *
 
     FROM unioned
