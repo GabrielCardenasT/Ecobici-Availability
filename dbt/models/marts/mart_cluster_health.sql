@@ -129,7 +129,16 @@ with_health_score AS (
         -- This table holds every snapshot in the lookback window, so a Looker
         -- scorecard with no filter averages ~2 days of history. Filter on
         -- is_latest_snapshot = TRUE to show the state of the system right now.
-        ingested_at_utc = MAX(ingested_at_utc) OVER ()               AS is_latest_snapshot
+        ingested_at_utc = MAX(ingested_at_utc) OVER ()               AS is_latest_snapshot,
+
+        -- ── System-wide availability (capacity-weighted) ─────────────────────
+        -- Same value on every cluster row of a snapshot. Averaging
+        -- cluster_availability_pct across clusters weights a 20-station cluster
+        -- the same as a 400-station one; this is total bikes / total capacity.
+        ROUND(SAFE_DIVIDE(
+            SUM(total_bikes_available)       OVER (PARTITION BY ingested_at_utc),
+            SUM(total_operational_capacity)  OVER (PARTITION BY ingested_at_utc)
+        ), 4)                                                        AS system_availability_pct
 
     FROM aggregated
 
