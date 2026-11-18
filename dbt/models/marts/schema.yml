@@ -16,6 +16,13 @@ models:
           - accepted_values:
               arguments:
                 values: ['critical','high','medium']
+      - name: alert_label
+        description: Display label for alert_type (e.g. 'Bike shortage').
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Bike shortage','Dock overflow','Critical drain','Imminent empty']
       - name: dispatch_priority_score
         description: Urgency in [0, 1]; higher = dispatch sooner. Empty stations score 1.0.
         tests:
