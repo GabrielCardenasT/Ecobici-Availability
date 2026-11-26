@@ -23,6 +23,8 @@ with_alert_status AS (
 
     SELECT
         *,
+        -- "lat,lon" string: BI tools (Looker Studio) map it as a geo point.
+        CONCAT(CAST(lat AS STRING), ',', CAST(lon AS STRING))        AS lat_lon,
         CASE
             WHEN availability_pct = 0
                 THEN '🔴 Vacía'

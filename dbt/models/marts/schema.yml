@@ -78,3 +78,28 @@ models:
           - accepted_values:
               arguments:
                 values: ['healthy','system_closed','low_coverage','gap','in_progress']
+
+  - name: mart_system_kpis
+    description: System-wide KPIs per snapshot with 24h-earlier comparison values. Feeds the dashboard KPI row.
+    columns:
+      - name: ingested_at_utc
+        tests: [not_null, unique]
+      - name: system_availability_pct
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+      - name: empty_stations
+        tests: [not_null]
+      - name: full_stations
+        tests: [not_null]
+      - name: pipeline_uptime_24h
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+      - name: is_latest_snapshot
+        tests: [not_null]
