@@ -103,3 +103,16 @@ models:
                 max_value: 1
       - name: is_latest_snapshot
         tests: [not_null]
+
+  - name: mart_latest_snapshot
+    description: Current state of every station (latest poll), for maps and station tables.
+    columns:
+      - name: station_id
+        tests: [not_null, unique]
+      - name: station_status
+        description: English status label for dashboards (Empty / Critical / Full / Normal).
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Empty','Critical (<10% bikes)','Full (<10% docks)','Normal']

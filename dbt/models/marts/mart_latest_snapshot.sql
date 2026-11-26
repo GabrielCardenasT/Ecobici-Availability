@@ -40,7 +40,15 @@ with_alert_status AS (
             WHEN availability_pct < 0.10   THEN 2
             WHEN dock_pct < 0.10           THEN 3
             ELSE 4
-        END AS alert_rank
+        END AS alert_rank,
+
+        -- English label for dashboards (same rules as estado_estacion).
+        CASE
+            WHEN availability_pct = 0      THEN 'Empty'
+            WHEN availability_pct < 0.10   THEN 'Critical (<10% bikes)'
+            WHEN dock_pct < 0.10           THEN 'Full (<10% docks)'
+            ELSE 'Normal'
+        END AS station_status
 
     FROM latest_data
 
