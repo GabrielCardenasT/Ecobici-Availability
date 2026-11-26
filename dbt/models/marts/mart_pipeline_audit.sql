@@ -100,6 +100,7 @@ audit AS (
     SELECT
         p.audit_date,
         p.audit_hour,
+        DATETIME(p.audit_date, TIME(p.audit_hour, 0, 0))            AS audit_hour_start,
         p.actual_polls,
         p.expected_polls,
         p.stations_observed,

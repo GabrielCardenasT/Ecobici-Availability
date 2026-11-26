@@ -69,7 +69,7 @@ Looker Studio Dashboard
 ## Data Quality
 
 Every change goes through a pull request and runs `dbt build` against
-BigQuery: 7 models, 33 tests (schema tests, accepted ranges/values, and
+BigQuery: 8 models, 33+ tests (schema tests, accepted ranges/values, and
 regression tests for bugs that once shipped).
 
 | Issue found in the dashboard | Root cause | Fix |
@@ -98,6 +98,7 @@ mart_rebalancing_alerts (table) — one row per active alert, ranked by dispatch
 mart_cluster_health (table) — zone-level aggregations + system-wide availability
 mart_latest_snapshot (table) — current state of every station
 mart_pipeline_audit (table) — hourly ingestion health (polls, feed coverage, status)
+mart_system_kpis (table) — system-wide KPIs per snapshot with 24h comparison (dashboard KPI row)
 
 
 ## Running Locally
