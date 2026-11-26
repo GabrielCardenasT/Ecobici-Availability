@@ -69,7 +69,7 @@ Looker Studio Dashboard
 ## Data Quality
 
 Every change goes through a pull request and runs `dbt build` against
-BigQuery: 8 models, 33+ tests (schema tests, accepted ranges/values, and
+BigQuery: 8 models, 41 tests (schema tests, accepted ranges/values, and
 regression tests for bugs that once shipped).
 
 | Issue found in the dashboard | Root cause | Fix |
